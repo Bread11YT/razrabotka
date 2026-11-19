@@ -1,0 +1,2009 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Пятёрка v3</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0d0b14;display:flex;align-items:center;justify-content:center;
+    min-height:100vh;font-family:'Segoe UI',system-ui,sans-serif;color:#e8e6f0;overflow:hidden}
+  .wrap{position:relative;width:960px;height:540px;border-radius:14px;overflow:hidden;
+    box-shadow:0 0 60px rgba(120,80,255,.35),0 0 0 2px #2a2340}
+  canvas{display:block;background:#14101f}
+  .topbar{position:absolute;top:0;left:0;right:0;height:44px;display:flex;align-items:center;
+    gap:12px;padding:0 12px;background:linear-gradient(#1b1630ee,#1b163000);font-size:13px}
+  .topbar b{color:#ffd93d}
+  .topbar .pill{padding:3px 9px;border-radius:6px;background:#ffffff10;font-size:11px}
+  .spd{display:flex;gap:3px;margin-left:4px}
+  .spd button,.topbar button{padding:3px 8px;font-size:11px;font-weight:700;border-radius:5px;
+    border:1px solid #4a3f85;background:#241c48;color:#a89ecf;cursor:pointer;transition:.1s}
+  .spd button.active,.topbar button.active{background:linear-gradient(#6b4bff,#4a2fd0);color:#fff;border-color:#8a6bff}
+  #synergyList{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;max-width:340px;justify-content:flex-end}
+  .syn{padding:2px 6px;border-radius:20px;font-size:9.5px;background:#ffffff12;border:1px solid #ffffff22;white-space:nowrap}
+  .syn.active{background:#6b4bff33;color:#c9b8ff}
+  .bottombar{position:absolute;bottom:0;left:0;right:0;height:58px;display:flex;align-items:center;
+    justify-content:center;gap:10px;background:linear-gradient(#14101f00,#14101fee)}
+  button.act{font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
+    padding:10px 18px;border-radius:9px;border:1px solid #5a4bb8;
+    background:linear-gradient(#3a2f6e,#241c48);color:#e8e6f0;transition:.15s;letter-spacing:.3px}
+  button.act:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 18px #6b4bff55;border-color:#8a6bff}
+  button.act:disabled{opacity:.35;cursor:not-allowed}
+  button.act.primary{background:linear-gradient(#6b4bff,#4a2fd0);border-color:#8a6bff}
+  button.act.small{padding:5px 10px;font-size:11px}
+  .modal{position:absolute;inset:0;background:#080611ee;backdrop-filter:blur(4px);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:12px;padding:22px;z-index:10;overflow-y:auto}
+  .modal.hidden{display:none}
+  .modal h2{font-size:20px;letter-spacing:1px}
+  .modal h3{font-size:13px;color:#c9b8ff;margin:6px 0 4px;letter-spacing:.5px}
+  .modal p.sub{color:#9a92bb;font-size:11.5px}
+  .cards{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .card{width:150px;padding:12px;border-radius:11px;cursor:pointer;
+    background:linear-gradient(#241c48,#1a1436);border:1px solid #4a3f85;transition:.15s;text-align:center}
+  .card:hover{transform:translateY(-4px);border-color:#8a6bff;box-shadow:0 10px 28px #6b4bff44}
+  .card .icon{font-size:26px;margin-bottom:5px}
+  .card .t{font-weight:700;font-size:12px;margin-bottom:4px;color:#fff}
+  .card .d{font-size:10.5px;color:#a89ecf;line-height:1.4}
+  .card .rar{font-size:9px;margin-top:5px;letter-spacing:1px;text-transform:uppercase}
+  .r-common{color:#8fa3b8}.r-rare{color:#5bc8ff}.r-epic{color:#c07bff}.r-legend{color:#ffd93d}
+  .hero-card{padding:8px 6px;width:78px}
+  .hero-card .icon{font-size:22px}
+  .hero-card .t{font-size:10px}
+  .hero-card .d{font-size:9px}
+  .hero-card.sel{border-color:#5ce08a;box-shadow:0 0 12px #5ce08a55}
+  .hero-card.disabled{opacity:.4}
+  .active-row{display:flex;gap:6px;justify-content:center;margin:8px 0;flex-wrap:nowrap}
+  .slot-card{width:88px;padding:8px 5px;border-radius:8px;background:#241c48;
+    border:1px solid #4a3f85;text-align:center;cursor:pointer;position:relative}
+  .slot-card .pos{position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+    font-size:8px;background:#0d0b14;padding:1px 5px;border-radius:6px;color:#ffd93d;border:1px solid #4a3f85}
+  .slot-card .icon{font-size:22px}
+  .slot-card .t{font-size:9.5px;margin-top:2px}
+  .slot-card .arrows{display:flex;justify-content:center;gap:2px;margin-top:4px}
+  .slot-card .arrows button{padding:0 5px;font-size:10px;background:#1a1436;border:1px solid #4a3f85;color:#a89ecf;border-radius:3px;cursor:pointer}
+  .tab-row{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+  .tab-row button{padding:5px 11px;font-size:11px;font-weight:600;border-radius:7px;
+    border:1px solid #4a3f85;background:#241c48;color:#a89ecf;cursor:pointer}
+  .tab-row button.primary{background:linear-gradient(#6b4bff,#4a2fd0);color:#fff;border-color:#8a6bff}
+  .inv-grid{display:flex;gap:4px;flex-wrap:wrap;max-height:120px;overflow-y:auto;
+    padding:6px;background:#0d0b14;border-radius:8px;width:100%;max-width:640px;min-height:40px}
+  .inv-item{width:62px;padding:5px;border-radius:6px;background:#241c48;border:1px solid #4a3f85;
+    cursor:pointer;text-align:center;transition:.1s;position:relative}
+  .inv-item:hover{border-color:#ffd93d;transform:translateY(-2px)}
+  .inv-item.equipped{border-color:#5ce08a;box-shadow:0 0 8px #5ce08a55}
+  .inv-item.used{opacity:.35;cursor:not-allowed}
+  .inv-icon{font-size:18px}
+  .inv-name{font-size:8px;color:#a89ecf;line-height:1.2;margin-top:1px}
+  .inv-lvl{position:absolute;top:1px;right:3px;font-size:8px;color:#ffd93d;font-weight:700}
+  .hero-detail{display:flex;gap:14px}
+  .slot-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;
+    background:#241c48;border:1px solid #4a3f85;min-width:200px;margin-bottom:5px;cursor:pointer;font-size:12px}
+  .slot-row.empty{opacity:.5}
+  .slot-row .lbl{font-size:9.5px;color:#9a92bb;text-transform:uppercase}
+  .slot-row .itm{margin-left:auto}
+  .stats{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:#c9b8ff}
+  .stats b{color:#fff}
+  .pity-bar{width:200px;height:6px;background:#1a1436;border-radius:3px;overflow:hidden;margin:3px auto}
+  .pity-fill{height:100%;background:linear-gradient(90deg,#5bc8ff,#c07bff)}
+  .merge-row{display:flex;gap:3px;flex-wrap:wrap;max-height:180px;overflow-y:auto;padding:4px}
+  .merge-group{display:flex;flex-direction:column;align-items:center;padding:6px;
+    background:#1a1436;border-radius:8px;border:1px solid #4a3f85;width:86px}
+  .merge-group .cnt{font-size:9px;color:#ffd93d;margin-top:2px}
+  .merge-group button{margin-top:4px;padding:2px 6px;font-size:9px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <canvas id="game" width="960" height="540"></canvas>
+  <div class="topbar">
+    <div class="pill">Волна <b id="waveNum">0</b></div>
+    <div class="pill">💎 <b id="gemsEl">0</b></div>
+    <div class="pill">💀 <b id="soulsEl">0</b></div>
+    <div class="spd">
+      <button data-speed="1" class="active">1×</button>
+      <button data-speed="2">2×</button>
+      <button data-speed="3">3×</button>
+    </div>
+    <button id="pauseBtn">⏸</button>
+    <button id="autoBtn">↻</button>
+    <div id="synergyList"></div>
+  </div>
+  <div class="bottombar">
+    <button id="rosterBtn" class="act">👥 Отряд</button>
+    <button id="bannerBtn" class="act">🎲 Баннеры</button>
+    <button id="metaBtn" class="act">💀 Души</button>
+    <button id="startBtn" class="act primary">▶ Волна</button>
+  </div>
+  <div id="modal" class="modal hidden"></div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   УТИЛИТЫ
+   ══════════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const canvas = $('game'), ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const rnd = (a,b) => a + Math.random()*(b-a);
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const dist = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+const fmt = n => n>=1000 ? (n/1000).toFixed(1)+'k' : Math.round(n);
+let uid = 1;
+const uidNew = () => uid++;
+
+/* ══════════════════════════════════════════════════════════
+   ДАННЫЕ
+   ══════════════════════════════════════════════════════════ */
+const TAGS = {
+  fire:{n:'Огонь',c:'#ff6b35'}, ice:{n:'Лёд',c:'#5bc8ff'},
+  holy:{n:'Свет',c:'#ffd93d'}, shadow:{n:'Тьма',c:'#a06bff'},
+  storm:{n:'Шторм',c:'#4dd0e1'}, warrior:{n:'Воин',c:'#e05c5c'},
+  mage:{n:'Маг',c:'#5c8ee0'}, support:{n:'Оплот',c:'#5ce08a'},
+};
+
+const SYNERGIES = {
+  fire:{n:'Пламя',need:2,desc:'Атаки поджигают'},
+  ice:{n:'Мороз',need:2,desc:'Атаки замедляют'},
+  holy:{n:'Благодать',need:2,desc:'+2% HP/сек команде'},
+  shadow:{n:'Тень',need:2,desc:'+20% крит'},
+  storm:{n:'Шторм',need:2,desc:'+20% скор. атаки'},
+  warrior:{n:'Строй',need:2,desc:'+25% макс. HP'},
+  mage:{n:'Чародейство',need:2,desc:'+25% урона'},
+  support:{n:'Забота',need:2,desc:'+50% лечение'},
+};
+
+// 12 героев с ультимейтами
+const HERO_DEFS = [
+  { id:'pepel', name:'Пепел', tags:['fire','warrior'], color:'#ff6b35', emoji:'🔥',
+    baseHp:280, baseAtk:26, baseAspd:1.15, baseRange:130, type:'melee', splash:80, baseCrit:0.05,
+    ult:{n:'Огненная волна',desc:'AoE 3×ATK по всем врагам в радиусе'} },
+  { id:'iney', name:'Иней', tags:['ice','mage'], color:'#5bc8ff', emoji:'❄️',
+    baseHp:160, baseAtk:18, baseAspd:0.95, baseRange:380, type:'proj', baseCrit:0.05,
+    ult:{n:'Ледяной шторм',desc:'Урон + замедление всех врагов 4с'} },
+  { id:'lira', name:'Лира', tags:['holy','support'], color:'#ffd93d', emoji:'✨',
+    baseHp:180, baseAtk:0, baseAspd:0.85, baseRange:0, type:'heal', baseCrit:0,
+    ult:{n:'Массовое лечение',desc:'+40% HP всей команде'} },
+  { id:'klyk', name:'Клык', tags:['shadow','warrior'], color:'#a06bff', emoji:'🗡️',
+    baseHp:200, baseAtk:15, baseAspd:2.3, baseRange:110, type:'melee', baseCrit:0.25,
+    ult:{n:'Теневой удар',desc:'Тройной урон по одной цели'} },
+  { id:'grom', name:'Гром', tags:['storm','mage'], color:'#4dd0e1', emoji:'⚡',
+    baseHp:170, baseAtk:24, baseAspd:0.75, baseRange:400, type:'chain', baseCrit:0.08,
+    ult:{n:'Шторм',desc:'Урон по 6 случайным врагам'} },
+  { id:'titan', name:'Титан', tags:['warrior','ice'], color:'#7bb5d4', emoji:'🛡️',
+    baseHp:420, baseAtk:18, baseAspd:0.7, baseRange:110, type:'melee', baseCrit:0.03,
+    ult:{n:'Ледяная броня',desc:'Щит 50% HP + AoE урон'} },
+  { id:'vedma', name:'Ведьма', tags:['shadow','mage','fire'], color:'#b040ff', emoji:'🔮',
+    baseHp:140, baseAtk:14, baseAspd:1.1, baseRange:360, type:'proj', baseCrit:0.1,
+    ult:{n:'Проклятие',desc:'Поджог и замедление всех врагов'} },
+  { id:'lun', name:'Лун', tags:['holy','storm'], color:'#aad8ff', emoji:'🌙',
+    baseHp:170, baseAtk:22, baseAspd:0.9, baseRange:340, type:'chain', baseCrit:0.08,
+    ult:{n:'Лунный луч',desc:'AoE урон + лечение себе 30%'} },
+  { id:'valk', name:'Валькирия', tags:['holy','warrior'], color:'#ffd700', emoji:'⚔️',
+    baseHp:240, baseAtk:24, baseAspd:1.3, baseRange:120, type:'melee', splash:60, baseCrit:0.1,
+    ult:{n:'Божественный удар',desc:'AoE урон + лечение союзников 15%'} },
+  { id:'druid', name:'Друид', tags:['support','fire'], color:'#90d070', emoji:'🌿',
+    baseHp:200, baseAtk:10, baseAspd:1.0, baseRange:300, type:'proj', baseCrit:0.05,
+    ult:{n:'Регенерация',desc:'Лечение союзников 25% + поджог врагов'} },
+  { id:'rogue', name:'Разбойник', tags:['shadow','warrior'], color:'#666', emoji:'🎭',
+    baseHp:170, baseAtk:22, baseAspd:1.8, baseRange:100, type:'melee', baseCrit:0.4,
+    ult:{n:'Смертельный удар',desc:'Гарантированный крит 400%'} },
+  { id:'monk', name:'Монах', tags:['holy','support','warrior'], color:'#ffaa44', emoji:'☯️',
+    baseHp:230, baseAtk:16, baseAspd:1.2, baseRange:120, type:'melee', splash:50, baseCrit:0.08,
+    ult:{n:'Просветление',desc:'Лечение 30% + щит 25% HP'} },
+];
+
+// Слоты строя
+const SLOT_OFFSETS = [0, 55, 110, 165, 220];
+const HERO_ROW_Y = 340;
+const GROUP_START_X = 70;
+const GROUP_MAX_X = 480;
+
+// Враги
+const ENEMY_DEFS = {
+  normal:{hp:60,spd:70,atk:8,aspd:0.8,range:50,r:15,color:'#e05c5c',name:'Враг'},
+  fast:{hp:35,spd:115,atk:5,aspd:1.3,range:45,r:12,color:'#7ee081',name:'Бегун'},
+  tank:{hp:150,spd:45,atk:13,aspd:0.6,range:55,r:20,color:'#c98b4b',name:'Танк'},
+  archer:{hp:45,spd:55,atk:12,aspd:0.7,range:280,r:14,color:'#a060d0',name:'Лучник',ranged:true},
+  bomber:{hp:40,spd:120,atk:0,aspd:0,range:30,r:13,color:'#ffaa00',name:'Бомбер',explodes:true},
+  shield:{hp:120,spd:50,atk:10,aspd:0.7,range:55,r:19,color:'#8899aa',name:'Щитоносец',shield:80},
+  healer:{hp:70,spd:55,atk:0,aspd:0.9,range:200,r:14,color:'#66ff99',name:'Лекарь',heals:true},
+  boss:{hp:800,spd:40,atk:30,aspd:0.8,range:75,r:34,color:'#e04b8a',name:'БОСС',boss:true},
+};
+
+// Сеты экипировки
+const SETS = {
+  warrior:{n:'Воителя',c:'#e05c5c',b2:{hpP:0.20},b3:{hpP:0.40,atkP:0.15}},
+  mage:{n:'Мага',c:'#5c8ee0',b2:{atkP:0.20},b3:{atkP:0.35,crit:0.15}},
+  shadow:{n:'Тени',c:'#a06bff',b2:{crit:0.15},b3:{crit:0.30,aspdP:0.20}},
+  holy:{n:'Света',c:'#ffd93d',b2:{regen:0.005,hpP:0.10},b3:{regen:0.015,hpP:0.25}},
+};
+
+const SLOTS = { weapon:'Оружие', armor:'Броня', charm:'Талисман' };
+
+const GEAR_DEFS = [
+  // Воин
+  {id:'sword',name:'Стальной клинок',icon:'🗡️',slot:'weapon',set:'warrior',stats:{atkP:0.10}},
+  {id:'plate',name:'Латы',icon:'🛡️',slot:'armor',set:'warrior',stats:{hpP:0.15}},
+  {id:'warhelm',name:'Шлем воина',icon:'⛑️',slot:'charm',set:'warrior',stats:{hpP:0.10,atkP:0.05}},
+  // Маг
+  {id:'staff',name:'Посох',icon:'🪄',slot:'weapon',set:'mage',stats:{atkP:0.12}},
+  {id:'robe',name:'Мантия',icon:'👘',slot:'armor',set:'mage',stats:{hpP:0.10}},
+  {id:'orb',name:'Сфера',icon:'🔮',slot:'charm',set:'mage',stats:{atkP:0.08,crit:0.05}},
+  // Тень
+  {id:'dagger',name:'Кинжал',icon:'🔪',slot:'weapon',set:'shadow',stats:{aspdP:0.15,crit:0.10}},
+  {id:'cloak',name:'Плащ тени',icon:'🧥',slot:'armor',set:'shadow',stats:{hpP:0.08,crit:0.05}},
+  {id:'ring',name:'Кольцо',icon:'💍',slot:'charm',set:'shadow',stats:{crit:0.10}},
+  // Свет
+  {id:'mace',name:'Булава',icon:'🔨',slot:'weapon',set:'holy',stats:{atkP:0.10}},
+  {id:'aegis',name:'Эгида',icon:'🏛️',slot:'armor',set:'holy',stats:{hpP:0.12,regen:0.003}},
+  {id:'amulet',name:'Амулет',icon:'📿',slot:'charm',set:'holy',stats:{regen:0.005}},
+];
+
+const UPGRADES = [
+  {n:'Ярость',i:'🔥',d:'+12% урон команды',a:m=>m.dmgMul*=1.12},
+  {n:'Стойкость',i:'🛡️',d:'+15% макс. HP',a:m=>m.hpMul*=1.15},
+  {n:'Скорость',i:'💨',d:'+12% скор. атаки',a:m=>m.aspdMul*=1.12},
+  {n:'Регенерация',i:'💚',d:'+0.5% HP/сек',a:m=>m.regen+=0.005},
+  {n:'Удача',i:'🎯',d:'+10% шанс крита',a:m=>m.critAdd+=0.1},
+  {n:'Мастерство',i:'✨',d:'+20% урон ультов',a:m=>m.abilityMul*=1.2},
+  {n:'Исцеление',i:'💖',d:'Полное лечение',sp:'heal'},
+  {n:'Жадность',i:'💰',d:'+200 💎',sp:'gems'},
+  {n:'Закалка',i:'⭐',d:'Случайный герой +2 ур.',sp:'levelup'},
+];
+
+const META_UPGRADES = [
+  {id:'hp',n:'Стойкость',i:'🛡️',d:'+10% макс. HP героям',max:10,cost:s=>10+s*5},
+  {id:'atk',n:'Мощь',i:'⚔️',d:'+8% урон героям',max:10,cost:s=>10+s*5},
+  {id:'aspd',n:'Быстрота',i:'💨',d:'+6% скор. атаки',max:10,cost:s=>10+s*5},
+  {id:'crit',n:'Меткость',i:'🎯',d:'+3% крит',max:10,cost:s=>15+s*6},
+  {id:'startGems',n:'Мешок золота',i:'💰',d:'+50💎 на старте',max:5,cost:s=>30+s*20},
+];
+
+/* ══════════════════════════════════════════════════════════
+   СОХРАНЕНИЕ
+   ══════════════════════════════════════════════════════════ */
+const SAVE_KEY = 'pyatorka_v3_save';
+const DEFAULT_ROSTER = ['pepel','iney','lira','klyk','grom'];
+
+function defaultHeroData() {
+  const d = {};
+  for (const h of HERO_DEFS) d[h.id] = { level:1, shards:0, gear:{weapon:null,armor:null,charm:null} };
+  return d;
+}
+
+function loadSave() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    // миграции можно здесь
+    return s;
+  } catch(e) { return null; }
+}
+
+function persist() {
+  const s = {
+    ver: 3,
+    roster: state.roster,
+    heroData: state.heroData,
+    inventory: state.inventory,
+    gems: state.gems,
+    souls: state.souls,
+    waveRecord: state.waveRecord,
+    metaUpgrades: state.metaUpgrades,
+    pity: state.pity,
+    settings: state.settings,
+    uidNext: uid,
+    firstBattleRewards: state.firstBattleRewards,
+    lastDaily: state.lastDaily,
+  };
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); } catch(e) {}
+}
+
+/* ══════════════════════════════════════════════════════════
+   СОСТОЯНИЕ
+   ══════════════════════════════════════════════════════════ */
+const state = {
+  // постоянное
+  roster: [...DEFAULT_ROSTER],
+  heroData: defaultHeroData(),
+  inventory: [],
+  gems: 300, souls: 0, waveRecord: 0,
+  metaUpgrades: {hp:0,atk:0,aspd:0,crit:0,startGems:0},
+  pity: { count:0, legendaryCount:0 },
+  settings: { autoNext:false, sound:true, target:'nearest', muted:false },
+  firstBattleRewards: [false,false,false],
+  lastDaily: '',
+  // забег
+  phase:'prep', wave:0, timeScale:1, paused:false,
+  groupX: GROUP_START_X, groupMoving:false,
+  heroes:[], enemies:[], projectiles:[], enemyProjectiles:[],
+  beams:[], particles:[], floats:[], telegraphs:[], ults:[], shockwaves:[],
+  mods:{dmgMul:1,hpMul:1,aspdMul:1,abilityMul:1,regen:0,critAdd:0},
+  synergies:{}, spawnQueue:[], spawnTimer:0, time:0,
+  shake:{t:0,a:0},
+};
+
+/* ══════════════════════════════════════════════════════════
+   ЗВУК
+   ══════════════════════════════════════════════════════════ */
+let actx = null;
+function initAudio() {
+  if (actx) return;
+  try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+}
+function sfx(type) {
+  if (!actx || !state.settings.sound) return;
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.connect(g); g.connect(actx.destination);
+  const t = actx.currentTime;
+  if (type === 'hit') { o.type='square'; o.frequency.setValueAtTime(220,t); g.gain.setValueAtTime(0.02,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.06); o.start(t); o.stop(t+0.06); }
+  else if (type === 'crit') { o.type='sawtooth'; o.frequency.setValueAtTime(440,t); o.frequency.exponentialRampToValueAtTime(880,t+0.1); g.gain.setValueAtTime(0.04,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.15); o.start(t); o.stop(t+0.15); }
+  else if (type === 'ult') { o.type='triangle'; o.frequency.setValueAtTime(300,t); o.frequency.exponentialRampToValueAtTime(900,t+0.3); g.gain.setValueAtTime(0.06,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.4); o.start(t); o.stop(t+0.4); }
+  else if (type === 'boss') { o.type='sawtooth'; o.frequency.setValueAtTime(80,t); g.gain.setValueAtTime(0.08,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.5); o.start(t); o.stop(t+0.5); }
+  else if (type === 'death') { o.type='sine'; o.frequency.setValueAtTime(400,t); o.frequency.exponentialRampToValueAtTime(80,t+0.4); g.gain.setValueAtTime(0.05,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.5); o.start(t); o.stop(t+0.5); }
+  else if (type === 'gacha') { o.type='sine'; o.frequency.setValueAtTime(600,t); o.frequency.linearRampToValueAtTime(1200,t+0.2); g.gain.setValueAtTime(0.05,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.3); o.start(t); o.stop(t+0.3); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   ПОСТРОЕНИЕ ГЕРОЕВ
+   ══════════════════════════════════════════════════════════ */
+function rebuildActiveHeroes() {
+  const prev = {};
+  for (const o of state.heroes) prev[o.id] = o;
+  state.heroes = state.roster.map((id, slot) => {
+    const def = HERO_DEFS.find(d => d.id === id);
+    const hd = state.heroData[id];
+    return {
+      ...def,
+      slotIndex: slot,
+      isHero: true,
+      level: hd.level,
+      gear: hd.gear,
+      x: GROUP_START_X + SLOT_OFFSETS[slot],
+      y: HERO_ROW_Y,
+      maxHp:0, hp:0, atk:0, aspd:1, range:0, crit:0, regen:0,
+      ultCharge:0, ultMax:100, ultActive:0,
+      cd:0, flash:0, attackAnim:0, moving:false, shield:0,
+    };
+  });
+  // сохраняем состояние героев, уже бывших в бою
+  for (const h of state.heroes) {
+    const o = prev[h.id];
+    if (o && state.phase !== 'prep' || o && o.hp < 0) {
+      h.hp = o.hp <= 0 ? -1 : o.hp; h.maxHp = o.maxHp || 0; h.ultCharge = o.ultCharge; h.shield = o.shield;
+    }
+  }
+  recalcHeroes();
+}
+
+function getGearStats(hero) {
+  const stats = { atkP:0, hpP:0, aspdP:0, crit:0, regen:0 };
+  const setCounts = {};
+  for (const slot in hero.gear) {
+    const uidRef = hero.gear[slot];
+    if (!uidRef) continue;
+    const item = state.inventory.find(i => i.uid === uidRef);
+    if (!item) continue;
+    const def = GEAR_DEFS.find(g => g.id === item.defId);
+    if (!def) continue;
+    const mult = Math.pow(1.5, item.level - 1);
+    for (const k in def.stats) stats[k] = (stats[k]||0) + def.stats[k] * mult;
+    if (def.set) setCounts[def.set] = (setCounts[def.set]||0) + 1;
+  }
+  // Сет-бонусы
+  for (const sid in setCounts) {
+    const c = setCounts[sid];
+    const sdef = SETS[sid];
+    if (c >= 2) for (const k in sdef.b2) stats[k] = (stats[k]||0) + sdef.b2[k];
+    if (c >= 3) for (const k in sdef.b3) stats[k] = (stats[k]||0) + sdef.b3[k];
+  }
+  return { stats, setCounts };
+}
+
+function recalcHeroes() {
+  const counts = {};
+  state.heroes.forEach(h => h.tags.forEach(t => counts[t] = (counts[t]||0)+1));
+  state.synergies = {};
+  for (const t in SYNERGIES) state.synergies[t] = (counts[t]||0) >= SYNERGIES[t].need;
+
+  const m = state.mods;
+  const mu = state.metaUpgrades;
+  const metaHp  = 1 + (mu.hp||0) * 0.10;
+  const metaAtk = 1 + (mu.atk||0) * 0.08;
+  const metaAspd= 1 + (mu.aspd||0) * 0.06;
+  const metaCrit= (mu.crit||0) * 0.03;
+
+  for (const h of state.heroes) {
+    const gs = getGearStats(h);
+    const g = gs.stats;
+
+    const lvlHp   = 1 + (h.level-1) * 0.09;
+    const lvlDmg  = 1 + (h.level-1) * 0.08;
+    const lvlAspd = 1 + (h.level-1) * 0.03;
+
+    let hpMul   = m.hpMul   * lvlHp   * (1 + g.hpP)   * metaHp;
+    let dmgMul  = m.dmgMul  * lvlDmg  * (1 + g.atkP)  * metaAtk;
+    let aspdMul = m.aspdMul * lvlAspd * (1 + g.aspdP) * metaAspd;
+
+    if (state.synergies.warrior) hpMul   *= 1.25;
+    if (state.synergies.storm)   aspdMul *= 1.20;
+    if (state.synergies.mage)    dmgMul  *= 1.25;
+
+    const oldMax = h.maxHp;
+    h.maxHp = Math.round(h.baseHp * hpMul);
+    h.atk   = h.baseAtk * dmgMul;
+    h.aspd  = h.baseAspd * aspdMul;
+    h.range = h.baseRange;
+    h.regen = g.regen + m.regen;
+    h.crit  = (h.baseCrit||0) + m.critAdd + g.crit + metaCrit + (state.synergies.shadow ? 0.2 : 0);
+    if (h.hp === 0 || oldMax === 0) h.hp = h.maxHp;
+    else h.hp = (h.hp/oldMax) * h.maxHp;
+    h.setCounts = gs.setCounts;
+  }
+  updateHUD();
+}
+
+/* ══════════════════════════════════════════════════════════
+   ЭФФЕКТЫ
+   ══════════════════════════════════════════════════════════ */
+function addFloat(x,y,text,color,size=13) {
+  state.floats.push({x,y,text:String(text),color,size:size,life:0.9,max:0.9});
+}
+function addParticles(x,y,color,count) {
+  for (let i=0;i<count;i++){
+    const a=rnd(0,Math.PI*2),s=rnd(30,160);
+    state.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rnd(0.25,0.6),max:0.6,color,r:rnd(1.5,3.5)});
+  }
+}
+function addBeam(x1,y1,x2,y2,color,life=0.15){state.beams.push({x1,y1,x2,y2,color,life,max:life});}
+function addShake(t,a){ state.shake.t = Math.max(state.shake.t,t); state.shake.a = Math.max(state.shake.a,a); }
+function addShockwave(x,y,r,color,life=0.4){ state.shockwaves.push({x,y,r,maxR:r,color,life,max:life}); }
+
+/* ══════════════════════════════════════════════════════════
+   УРОН / ЛЕЧЕНИЕ
+   ══════════════════════════════════════════════════════════ */
+function damageEnemy(e,dmg,src,opts={}) {
+  if (e.hp <= 0) return;
+  const critChance = 0.05 + (src?.crit || 0);
+  const isCrit = Math.random() < critChance;
+  if (isCrit) { dmg *= 2; sfx('crit'); }
+  else if (Math.random() < 0.3) sfx('hit');
+
+  // Щит
+  if (e.shieldHp > 0) {
+    const absorbed = Math.min(e.shieldHp, dmg);
+    e.shieldHp -= absorbed;
+    dmg -= absorbed;
+  }
+
+  e.hp -= dmg; e.flash = 0.12;
+  addFloat(e.x, e.y - e.r - 6, Math.round(dmg), isCrit ? '#ffd93d' : '#fff', isCrit ? 17 : 13);
+  addParticles(e.x, e.y, isCrit ? '#ffd93d' : '#fff', isCrit ? 8 : 3);
+
+  if (state.synergies.fire && !opts.noBurn) e.burn = 3;
+  if (state.synergies.ice) e.slow = Math.max(e.slow, 1.5);
+
+  // Заряд ульты на источнике
+  if (src && src.isHero) src.ultCharge = Math.min(src.ultMax, src.ultCharge + dmg * 0.35);
+
+  if (e.hp <= 0) {
+    addParticles(e.x, e.y, e.color, 12);
+    addFloat(e.x, e.y, '✖', '#ff6b6b', 15);
+    sfx('death');
+  }
+}
+
+function healHero(h, amount) {
+  if (h.hp <= 0) return;
+  const before = h.hp;
+  h.hp = Math.min(h.maxHp, h.hp + amount);
+  const healed = Math.round(h.hp - before);
+  if (healed > 0) {
+    addFloat(h.x, h.y-28, '+'+healed, '#5ce08a', 13);
+    addParticles(h.x, h.y, '#5ce08a', 3);
+  }
+}
+
+function damageHero(h, dmg) {
+  if (h.hp <= 0) return;
+  if (h.shield > 0) {
+    const ab = Math.min(h.shield, dmg);
+    h.shield -= ab; dmg -= ab;
+  }
+  h.hp -= dmg;
+  h.flash = 0.12;
+  addFloat(h.x, h.y-24, Math.round(dmg), '#ff6b6b', 13);
+  addParticles(h.x, h.y, '#ff6b6b', 4);
+}
+
+/* ══════════════════════════════════════════════════════════
+   ЦЕЛИ
+   ══════════════════════════════════════════════════════════ */
+function pickTarget(h) {
+  const mode = state.settings.target;
+  const alive = state.enemies.filter(e => e.hp > 0 && dist(h,e) <= h.range);
+  if (alive.length === 0) return null;
+  if (mode === 'weakest') alive.sort((a,b) => a.hp - b.hp);
+  else if (mode === 'boss') {
+    const boss = alive.find(e => e.type === 'boss');
+    if (boss) return boss;
+    alive.sort((a,b) => dist(h,a) - dist(h,b));
+  } else alive.sort((a,b) => dist(h,a) - dist(h,b));
+  return alive[0];
+}
+
+function pickTargetAny(h) {
+  // для ультов — все враги без ограничения радиусом
+  return state.enemies.filter(e => e.hp > 0);
+}
+
+/* ══════════════════════════════════════════════════════════
+   УЛЬТИМЕЙТЫ
+   ══════════════════════════════════════════════════════════ */
+function castUlt(h) {
+  h.ultCharge = 0;
+  h.ultActive = 0.4;
+  sfx('ult');
+  addShake(0.25, 5);
+  addShockwave(h.x, h.y, 200, h.color, 0.5);
+  const p = state.mods.abilityMul;
+  const enemies = pickTargetAny(h);
+
+  switch (h.id) {
+    case 'pepel':
+      for (const e of enemies) if (dist(h,e) < 220) { damageEnemy(e, h.atk*3*p, h); e.burn = 4; }
+      addShockwave(h.x, h.y, 220, '#ff6b35', 0.6);
+      break;
+    case 'iney':
+      for (const e of enemies) { damageEnemy(e, h.atk*1.2*p, h); e.slow = 4; }
+      addShockwave(h.x, h.y, 500, '#5bc8ff', 0.5);
+      break;
+    case 'lira':
+      for (const a of state.heroes) if (a.hp > 0) healHero(a, a.maxHp * 0.4 * p);
+      addShockwave(h.x, h.y, 300, '#ffd93d', 0.6);
+      break;
+    case 'klyk': {
+      const t = pickTarget(h) || enemies[0];
+      if (t) { damageEnemy(t, h.atk*4*p, h); addBeam(h.x,h.y,t.x,t.y,'#a06bff',0.3); }
+      break;
+    }
+    case 'grom': {
+      const shuffled = [...enemies].sort(()=>Math.random()-0.5).slice(0,6);
+      for (const e of shuffled) { damageEnemy(e, h.atk*1.6*p, h); addBeam(h.x,h.y,e.x,e.y,'#4dd0e1',0.2); }
+      break;
+    }
+    case 'titan':
+      h.shield = h.maxHp * 0.5;
+      for (const e of enemies) if (dist(h,e) < 220) damageEnemy(e, h.atk*2*p, h);
+      addShockwave(h.x, h.y, 220, '#7bb5d4', 0.6);
+      break;
+    case 'vedma':
+      for (const e of enemies) { damageEnemy(e, h.atk*1.2*p, h); e.burn = 4; e.slow = Math.max(e.slow,3); }
+      addShockwave(h.x, h.y, 500, '#b040ff', 0.5);
+      break;
+    case 'lun':
+      for (const e of enemies) if (dist(h,e) < 300) damageEnemy(e, h.atk*2.2*p, h);
+      healHero(h, h.maxHp * 0.3);
+      addShockwave(h.x, h.y, 300, '#aad8ff', 0.6);
+      break;
+    case 'valk':
+      for (const e of enemies) if (dist(h,e) < 200) damageEnemy(e, h.atk*2.5*p, h);
+      for (const a of state.heroes) if (a.hp > 0) healHero(a, a.maxHp * 0.15);
+      addShockwave(h.x, h.y, 200, '#ffd700', 0.6);
+      break;
+    case 'druid':
+      for (const a of state.heroes) if (a.hp > 0) healHero(a, a.maxHp * 0.25 * p);
+      for (const e of enemies) e.burn = 4;
+      addShockwave(h.x, h.y, 400, '#90d070', 0.6);
+      break;
+    case 'rogue': {
+      const t = pickTarget(h) || enemies[0];
+      if (t) { damageEnemy(t, h.atk*5*p, {...h, crit:10}); addBeam(h.x,h.y,t.x,t.y,'#666',0.3); }
+      break;
+    }
+    case 'monk':
+      for (const a of state.heroes) if (a.hp > 0) { healHero(a, a.maxHp*0.3*p); a.shield = Math.max(a.shield, a.maxHp*0.25); }
+      addShockwave(h.x, h.y, 300, '#ffaa44', 0.6);
+      break;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   ВОЛНЫ / ВРАГИ
+   ══════════════════════════════════════════════════════════ */
+function makeEnemy(type, wave, elite) {
+  const scale = 1 + (wave-1) * 0.18 + state.waveRecord * 0.01;
+  const eliteMul = elite ? 1.5 : 1;
+  const d = ENEMY_DEFS[type] || ENEMY_DEFS.normal;
+  const e = {
+    x: W + rnd(20,140), y: HERO_ROW_Y + rnd(-180,140),
+    hp: d.hp*scale*eliteMul, maxHp: d.hp*scale*eliteMul,
+    speed: d.spd, atk: d.atk*scale, aspd: d.aspd,
+    range: d.range, r: d.r, color: d.color, name: d.name,
+    cd: rnd(0,0.6), burn:0, slow:0, flash:0, type,
+    shieldHp: d.shield ? d.shield*scale : 0,
+    elite: elite||false,
+  };
+  if (d.boss) {
+    e.phase = 1; e.telegraphCd = 3; e.spawnCd = 8;
+    e.boss = true;
+  }
+  return e;
+}
+
+function spawnWave() {
+  state.wave++;
+  state.phase = 'battle';
+  state.spawnQueue = []; state.spawnTimer = 0;
+  state.groupX = GROUP_START_X; state.groupMoving = false;
+  state.enemies = []; state.projectiles = []; state.enemyProjectiles = [];
+  state.telegraphs = []; state.ults = []; state.shockwaves = [];
+  state.heroes.forEach(h => {
+    if (h.hp > 0) h.hp = h.maxHp;
+    h.ultCharge = 0; h.shield = 0;
+    h.x = state.groupX + SLOT_OFFSETS[h.slotIndex];
+    h.y = HERO_ROW_Y;
+  });
+  // Регенерация мёртвых — нет, мёртвые остаются мёртвыми.
+
+  const n = state.wave;
+  const count = 8 + n * 2;
+  const isEliteWave = n % 10 === 0;
+  const pool = ['normal','fast','tank','archer','bomber','shield','healer'];
+  for (let i = 0; i < count; i++) {
+    let type = 'normal';
+    const r = Math.random();
+    if (r < 0.10) type = 'archer';
+    else if (r < 0.17) type = 'bomber';
+    else if (r < 0.24) type = 'shield';
+    else if (r < 0.30) type = 'healer';
+    else if (r < 0.45) type = 'fast';
+    else if (r < 0.60) type = 'tank';
+    state.spawnQueue.push({ delay: i * 0.36 + rnd(0,0.3), type, elite: isEliteWave });
+  }
+  if (n % 5 === 0) state.spawnQueue.push({ delay: count * 0.36 + 1.5, type: 'boss', elite: isEliteWave });
+  state.spawnQueue.sort((a,b) => a.delay - b.delay);
+
+  // Награды за первые 3 боя
+  if (n <= 3 && !state.firstBattleRewards[n-1]) {
+    setTimeout(() => {
+      state.firstBattleRewards[n-1] = true;
+      const item = rollGear();
+      state.inventory.push(item);
+      persist();
+      addFloat(W/2, H/2, '🎁 Бонус за бой!', '#ffd93d', 20);
+    }, 2000);
+  }
+  updateHUD();
+  persist();
+}
+
+function endWave() {
+  state.phase = 'reward';
+  const reward = 100 + state.wave * 30;
+  state.gems += reward;
+
+  // Elite wave → гарантированный предмет
+  if (state.wave % 10 === 0) {
+    const item = rollGear(2); // level 2+
+    state.inventory.push(item);
+    sfx('gacha');
+  }
+
+  if (state.wave > state.waveRecord) state.waveRecord = state.wave;
+  persist();
+  updateHUD();
+
+  if (state.settings.autoNext) {
+    // авто-выбор апгрейда и следующая волна
+    const u = pick(UPGRADES);
+    applyUpgrade(u);
+    setTimeout(() => { if (state.phase === 'reward') { state.phase = 'prep'; spawnWave(); } }, 800);
+  } else {
+    showReward();
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   ОБНОВЛЕНИЕ БОЯ
+   ══════════════════════════════════════════════════════════ */
+function updateGroupMovement(dt) {
+  for (const h of state.heroes) {
+    if (h.hp > 0) { h.x = state.groupX + SLOT_OFFSETS[h.slotIndex]; h.y = HERO_ROW_Y; }
+  }
+  if (state.phase !== 'battle') { state.groupMoving = false; return; }
+
+  if (state.enemies.length === 0) {
+    if (state.groupX < GROUP_MAX_X) {
+      state.groupX = Math.min(state.groupX + 60*dt, GROUP_MAX_X);
+      state.groupMoving = true;
+    } else state.groupMoving = false;
+    return;
+  }
+
+  let nearestE = state.enemies[0];
+  for (const e of state.enemies) if (e.x < nearestE.x) nearestE = e;
+
+  // передовой живой не-хил
+  let front = null;
+  for (const h of state.heroes) {
+    if (h.type !== 'heal' && h.hp > 0) {
+      if (!front || h.slotIndex > front.slotIndex) front = h;
+    }
+  }
+
+  let shouldStop = false;
+  if (front) {
+    const reach = state.groupX + SLOT_OFFSETS[front.slotIndex] + front.range;
+    if (nearestE.x - nearestE.r <= reach) shouldStop = true;
+  } else {
+    // одни хилеры
+    shouldStop = true;
+  }
+
+  if (!shouldStop && state.groupX < GROUP_MAX_X) {
+    state.groupX = Math.min(state.groupX + 60*dt, GROUP_MAX_X);
+    state.groupMoving = true;
+  } else state.groupMoving = false;
+}
+
+function nearestHero(e) {
+  let best=null, bestD=Infinity;
+  for (const h of state.heroes) {
+    if (h.hp <= 0) continue;
+    const d = dist(h,e);
+    if (d < bestD) { bestD = d; best = h; }
+  }
+  return best ? {h:best, dist:bestD} : null;
+}
+
+function heroAttack(h, t) {
+  h.attackAnim = 0.2;
+  h.flash = 0.1;
+  const dmg = h.atk;
+  if (h.type === 'melee') {
+    if (h.splash) {
+      for (const e of state.enemies) if (e.hp > 0 && dist(e,t) <= h.splash) damageEnemy(e, dmg*0.85, h);
+      damageEnemy(t, dmg, h);
+      addBeam(h.x, h.y, t.x, t.y, h.color, 0.13);
+    } else {
+      damageEnemy(t, dmg, h);
+      addBeam(h.x, h.y, t.x, t.y, h.color, 0.09);
+    }
+  } else if (h.type === 'proj') {
+    state.projectiles.push({ x:h.x, y:h.y, target:t, speed:560, dmg, color:h.color, owner:h, r:5 });
+  } else if (h.type === 'chain') {
+    const others = state.enemies.filter(e => e !== t && e.hp > 0)
+      .sort((a,b)=>dist(a,t)-dist(b,t)).slice(0,2);
+    const targets = [t, ...others];
+    targets.forEach((tt,i)=>damageEnemy(tt, dmg*(1-i*0.28), h));
+    targets.forEach(tt=>addBeam(h.x, h.y, tt.x, tt.y, h.color, 0.16));
+  }
+}
+
+function updateBattle(dt) {
+  state.time += dt;
+
+  // Спавн
+  state.spawnTimer += dt;
+  while (state.spawnQueue.length && state.spawnQueue[0].delay <= state.spawnTimer) {
+    const q = state.spawnQueue.shift();
+    state.enemies.push(makeEnemy(q.type, state.wave, q.elite));
+  }
+
+  // Синергия реген
+  const rs = state.synergies.holy ? 0.02 : 0;
+  if (rs > 0) for (const h of state.heroes) if (h.hp > 0) h.hp = Math.min(h.maxHp, h.hp + h.maxHp*rs*dt);
+
+  updateGroupMovement(dt);
+
+  // ГЕРОИ
+  for (const h of state.heroes) {
+    if (h.hp <= 0) continue;
+    h.cd -= dt;
+    h.flash = Math.max(0, h.flash - dt);
+    h.attackAnim = Math.max(0, h.attackAnim - dt);
+    h.ultActive = Math.max(0, h.ultActive - dt);
+    h.moving = state.groupMoving;
+
+    if (h.regen > 0) h.hp = Math.min(h.maxHp, h.hp + h.maxHp*h.regen*dt);
+
+    // Заряд ульты
+    if (h.ultCharge >= h.ultMax && h.ultActive <= 0) castUlt(h);
+
+    if (h.type === 'heal') {
+      let worst=null, wr=1;
+      for (const a of state.heroes) {
+        if (a.hp <= 0) continue;
+        const r = a.hp/a.maxHp;
+        if (r < wr) { wr = r; worst = a; }
+      }
+      if (worst && wr < 0.98 && h.cd <= 0) {
+        const amt = (20 + h.level*6) * (state.synergies.support ? 1.5 : 1);
+        healHero(worst, amt);
+        addBeam(h.x, h.y, worst.x, worst.y, h.color, 0.2);
+        h.cd = 1 / h.aspd;
+        h.ultCharge = Math.min(h.ultMax, h.ultCharge + amt*0.2);
+      }
+    } else {
+      const t = pickTarget(h);
+      if (t && h.cd <= 0) {
+        heroAttack(h, t);
+        h.cd = 1 / h.aspd;
+      }
+    }
+  }
+
+  // Снаряды героев
+  for (const p of state.projectiles) {
+    if (!p.target || p.target.hp <= 0) { p.dead = true; continue; }
+    const d = dist(p, p.target);
+    if (d < 14) {
+      damageEnemy(p.target, p.dmg, p.owner);
+      p.target.slow = Math.max(p.target.slow, 1.2);
+      addParticles(p.target.x, p.target.y, p.color, 5);
+      p.dead = true;
+    } else {
+      const step = p.speed*dt;
+      p.x += (p.target.x - p.x)/d * step;
+      p.y += (p.target.y - p.y)/d * step;
+    }
+  }
+  state.projectiles = state.projectiles.filter(p => !p.dead);
+
+  // ВРАГИ
+  for (const e of state.enemies) {
+    if (e.hp <= 0) continue;
+    e.flash = Math.max(0, e.flash - dt);
+
+    if (e.burn > 0) {
+      e.burn -= dt;
+      e.hp -= e.maxHp * 0.03 * dt;
+      if (Math.random() < 0.2) addParticles(e.x, e.y, '#ff6b35', 1);
+      if (e.hp <= 0) { addParticles(e.x, e.y, e.color, 10); continue; }
+    }
+
+    let spd = e.speed;
+    if (e.slow > 0) { e.slow -= dt; spd *= 0.5; }
+
+    const t = nearestHero(e);
+    if (!t) break;
+
+    // Спец-поведение
+    if (e.type === 'healer') {
+      // лечим ближайшего раненого врага
+      e.cd -= dt;
+      if (e.cd <= 0) {
+        let worst=null, wr=1;
+        for (const o of state.enemies) {
+          if (o === e || o.hp <= 0) continue;
+          const r = o.hp/o.maxHp;
+          if (r < wr && dist(o,e) < 220) { wr = r; worst = o; }
+        }
+        if (worst) {
+          worst.hp = Math.min(worst.maxHp, worst.hp + worst.maxHp * 0.15);
+          addBeam(e.x, e.y, worst.x, worst.y, '#66ff99', 0.3);
+          addFloat(worst.x, worst.y-20, '+HP', '#66ff99', 11);
+        }
+        e.cd = 1 / e.aspd;
+      }
+      // держимся на дистанции ~200: подходим, если далеко, отходим, если близко
+      if (t.dist > 230) {
+        e.x += (t.h.x - e.x)/t.dist * spd * dt;
+        e.y += (t.h.y - e.y)/t.dist * spd * dt;
+      } else if (t.dist < 150) {
+        e.x += spd * 0.3 * dt;
+      }
+      continue;
+    }
+
+    if (e.type === 'bomber') {
+      // бежим к ближайшему герою и взрываемся
+      if (t.dist < 35) {
+        // взрыв
+        for (const h of state.heroes) if (h.hp > 0 && dist(h,e) < 120) damageHero(h, e.atk + 25);
+        addShockwave(e.x, e.y, 120, '#ffaa00', 0.5);
+        addParticles(e.x, e.y, '#ffaa00', 20);
+        addShake(0.3, 6); sfx('boss');
+        e.hp = 0;
+        continue;
+      }
+      e.x += (t.h.x - e.x)/t.dist * spd * dt;
+      e.y += (t.h.y - e.y)/t.dist * spd * dt;
+      continue;
+    }
+
+    if (e.type === 'boss') {
+      updateBoss(e, t, dt, spd);
+      continue;
+    }
+
+    if (e.type === 'archer') {
+      // стреляем с дистанции
+      if (t.dist > e.range) {
+        e.x += (t.h.x - e.x)/t.dist * spd * dt;
+        e.y += (t.h.y - e.y)/t.dist * spd * dt;
+      } else {
+        e.cd -= dt;
+        if (e.cd <= 0) {
+          e.cd = 1/e.aspd;
+          state.enemyProjectiles.push({ x:e.x, y:e.y, target:t.h, speed:400, dmg:e.atk, color:'#a060d0', r:4 });
+        }
+      }
+      continue;
+    }
+
+    // обычные / танки / щитоносцы
+    if (t.dist > e.range) {
+      e.x += (t.h.x - e.x)/t.dist * spd * dt;
+      e.y += (t.h.y - e.y)/t.dist * spd * dt;
+    } else {
+      e.cd -= dt;
+      if (e.cd <= 0) {
+        e.cd = 1 / e.aspd;
+        damageHero(t.h, e.atk);
+        addBeam(e.x, e.y, t.h.x, t.h.y, e.color, 0.1);
+      }
+    }
+  }
+  state.enemies = state.enemies.filter(e => e.hp > 0);
+
+  // Вражеские снаряды
+  for (const p of state.enemyProjectiles) {
+    if (!p.target || p.target.hp <= 0) { p.dead = true; continue; }
+    const d = dist(p, p.target);
+    if (d < 12) {
+      damageHero(p.target, p.dmg);
+      p.dead = true;
+    } else {
+      const step = p.speed*dt;
+      p.x += (p.target.x - p.x)/d * step;
+      p.y += (p.target.y - p.y)/d * step;
+    }
+  }
+  state.enemyProjectiles = state.enemyProjectiles.filter(p => !p.dead);
+
+  // Телеграфы (красные зоны)
+  for (const tg of state.telegraphs) {
+    tg.timer -= dt;
+    if (tg.timer <= 0) {
+      // урон
+      for (const h of state.heroes) if (h.hp > 0 && dist(h,tg) < tg.r) damageHero(h, tg.dmg);
+      addShockwave(tg.x, tg.y, tg.r, '#ff4444', 0.4);
+      addShake(0.4, 8); sfx('boss');
+      tg.dead = true;
+    }
+  }
+  state.telegraphs = state.telegraphs.filter(t => !t.dead);
+
+  // Проверка конца
+  if (state.heroes.every(h => h.hp <= 0)) { state.phase='gameover'; showGameOver(); return; }
+  if (state.spawnQueue.length === 0 && state.enemies.length === 0) endWave();
+}
+
+function updateBoss(e, t, dt, spd) {
+  // Фаза 2 при 50% HP
+  if (e.phase === 1 && e.hp < e.maxHp*0.5) {
+    e.phase = 2; e.color = '#ff4488'; e.aspd *= 1.4; e.atk *= 1.2;
+    addShake(0.5, 10); sfx('boss');
+    // спавним миньонов
+    for (let i=0;i<3;i++) state.enemies.push(makeEnemy('fast', state.wave, false));
+    addFloat(e.x, e.y-50, 'ФАЗА 2', '#ff4488', 22);
+  }
+
+  // Движение
+  if (t.dist > e.range) {
+    e.x += (t.h.x - e.x)/t.dist * spd * dt;
+    e.y += (t.h.y - e.y)/t.dist * spd * dt;
+  } else {
+    e.cd -= dt;
+    if (e.cd <= 0) {
+      e.cd = 1/e.aspd;
+      damageHero(t.h, e.atk);
+    }
+  }
+
+  // Телеграф-АоЕ
+  e.telegraphCd -= dt;
+  if (e.telegraphCd <= 0) {
+    e.telegraphCd = e.phase === 1 ? 5 : 3;
+    const targets = state.heroes.filter(h => h.hp > 0);
+    if (targets.length) {
+      const tgt = pick(targets);
+      state.telegraphs.push({
+        x: tgt.x, y: tgt.y, r: 100,
+        timer: 1.5, maxTimer: 1.5,
+        dmg: e.atk * 2.5,
+      });
+      sfx('boss');
+    }
+  }
+
+  // Спавн миньонов в фазе 2
+  if (e.phase === 2) {
+    e.spawnCd -= dt;
+    if (e.spawnCd <= 0) {
+      e.spawnCd = 8;
+      for (let i=0;i<2;i++) state.enemies.push(makeEnemy(pick(['fast','normal']), state.wave, false));
+    }
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   ЭФФЕКТЫ ОБНОВЛЕНИЕ
+   ══════════════════════════════════════════════════════════ */
+function updateEffects(dt) {
+  for (const p of state.particles) {
+    p.x += p.vx*dt; p.y += p.vy*dt;
+    p.vx *= 0.94; p.vy *= 0.94; p.life -= dt;
+  }
+  state.particles = state.particles.filter(p => p.life > 0);
+  for (const f of state.floats) { f.y -= 34*dt; f.life -= dt; }
+  state.floats = state.floats.filter(f => f.life > 0);
+  for (const b of state.beams) b.life -= dt;
+  state.beams = state.beams.filter(b => b.life > 0);
+  for (const s of state.shockwaves) s.life -= dt;
+  state.shockwaves = state.shockwaves.filter(s => s.life > 0);
+  if (state.shake.t > 0) state.shake.t -= dt;
+  else state.shake.a = 0;
+}
+
+/* ══════════════════════════════════════════════════════════
+   ОТРИСОВКА
+   ══════════════════════════════════════════════════════════ */
+function render() {
+  ctx.save();
+  if (state.shake.t > 0) {
+    ctx.translate(rnd(-state.shake.a,state.shake.a), rnd(-state.shake.a,state.shake.a));
+  }
+  drawBackground();
+
+  // Телеграфы (под всеми)
+  for (const tg of state.telegraphs) {
+    const prog = 1 - tg.timer/tg.maxTimer;
+    ctx.fillStyle = `rgba(255,60,60,${0.15 + prog*0.25})`;
+    ctx.beginPath(); ctx.arc(tg.x, tg.y, tg.r, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#ff4444'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(tg.x, tg.y, tg.r*prog, 0, Math.PI*2); ctx.stroke();
+  }
+
+  // Лучи
+  for (const b of state.beams) {
+    ctx.globalAlpha = b.life/b.max;
+    ctx.strokeStyle = b.color; ctx.lineWidth = 3;
+    ctx.shadowColor = b.color; ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.moveTo(b.x1,b.y1); ctx.lineTo(b.x2,b.y2); ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+  ctx.globalAlpha = 1;
+
+  // Ударные волны
+  for (const s of state.shockwaves) {
+    const prog = 1 - s.life/s.max;
+    ctx.globalAlpha = s.life/s.max;
+    ctx.strokeStyle = s.color; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.maxR * prog, 0, Math.PI*2); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // Враги
+  for (const e of state.enemies) drawEnemy(e);
+
+  // Герои
+  for (const h of state.heroes) drawHero(h);
+
+  // Снаряды
+  for (const p of state.projectiles) {
+    ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+  for (const p of state.enemyProjectiles) {
+    ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // Частицы
+  for (const p of state.particles) {
+    ctx.globalAlpha = p.life/p.max;
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Всплывающие числа
+  ctx.textAlign = 'center';
+  for (const f of state.floats) {
+    ctx.globalAlpha = clamp(f.life/f.max, 0, 1);
+    ctx.fillStyle = f.color; ctx.font = `bold ${f.size}px sans-serif`;
+    ctx.strokeStyle = '#000a'; ctx.lineWidth = 3;
+    ctx.strokeText(f.text, f.x, f.y);
+    ctx.fillText(f.text, f.x, f.y);
+  }
+  ctx.globalAlpha = 1;
+
+  if (state.phase === 'battle') {
+    const left = state.enemies.length + state.spawnQueue.length;
+    ctx.fillStyle = '#ffffff66'; ctx.font = '13px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(`Врагов: ${left}`, W-20, H-18);
+  }
+  ctx.restore();
+
+  if (state.paused) {
+    ctx.fillStyle = '#000a'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 40px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('ПАУЗА', W/2, H/2);
+  }
+}
+
+function drawBackground() {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#1a1330'); g.addColorStop(0.55, '#161228'); g.addColorStop(1, '#0d0b14');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  const scroll = state.groupX - GROUP_START_X;
+
+  // Точки
+  for (let i = 0; i < 40; i++) {
+    const sx = ((i*137 + 50) - scroll*0.1) % (W + 100);
+    const sy = (i*89) % (H - 120);
+    ctx.fillStyle = '#ffffff22';
+    ctx.fillRect(sx < 0 ? sx + W + 100 : sx, sy, 1.5, 1.5);
+  }
+
+  // Горы
+  const off1 = scroll * 0.2;
+  ctx.fillStyle = '#1e1838';
+  for (let i = -2; i < 8; i++) {
+    const mx = i*200 - (off1 % 200);
+    ctx.beginPath();
+    ctx.moveTo(mx-100, H-60); ctx.lineTo(mx, H-190); ctx.lineTo(mx+100, H-60);
+    ctx.fill();
+  }
+
+  ctx.fillStyle = '#0f0b1a'; ctx.fillRect(0, H-60, W, 60);
+
+  // Полоски
+  const off2 = scroll;
+  ctx.strokeStyle = '#2a2340'; ctx.lineWidth = 3;
+  for (let i = -2; i < 20; i++) {
+    const gx = i*60 - (off2 % 60);
+    ctx.beginPath(); ctx.moveTo(gx, H-30); ctx.lineTo(gx-18, H-30); ctx.stroke();
+  }
+
+  ctx.strokeStyle = '#ffffff06'; ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 48) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+}
+
+function drawEnemy(e) {
+  // Тень
+  ctx.fillStyle = '#00000055';
+  ctx.beginPath(); ctx.ellipse(e.x, e.y+e.r*0.9, e.r*0.9, e.r*0.35, 0, 0, Math.PI*2); ctx.fill();
+
+  // Тело
+  ctx.fillStyle = e.flash > 0 ? '#fff' : e.color;
+  ctx.shadowColor = e.color; ctx.shadowBlur = e.boss ? 24 : (e.elite ? 14 : 8);
+  ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Щит
+  if (e.shieldHp > 0) {
+    ctx.strokeStyle = '#aaccee'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(e.x, e.y, e.r+5, 0, Math.PI*2); ctx.stroke();
+  }
+
+  // Символ врага
+  ctx.fillStyle = '#000a'; ctx.font = `bold ${e.r}px sans-serif`; ctx.textAlign = 'center';
+  let sym = '';
+  if (e.type === 'archer') sym = '🏹';
+  else if (e.type === 'bomber') sym = '💣';
+  else if (e.type === 'shield') sym = '🛡';
+  else if (e.type === 'healer') sym = '✚';
+  else if (e.boss) sym = '☠';
+  if (sym) { ctx.font = `${e.r*1.2}px sans-serif`; ctx.fillStyle = '#fff'; ctx.fillText(sym, e.x, e.y+e.r*0.4); }
+
+  // Индикаторы
+  if (e.burn > 0) { ctx.strokeStyle='#ff6b35'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(e.x,e.y,e.r+3,0,Math.PI*2); ctx.stroke(); }
+  if (e.slow > 0) { ctx.strokeStyle='#5bc8ff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(e.x,e.y,e.r+7,0,Math.PI*2); ctx.stroke(); }
+
+  // HP-бар
+  const bw = e.r*2.4;
+  const hr = clamp(e.hp/e.maxHp, 0, 1);
+  ctx.fillStyle = '#000a'; ctx.fillRect(e.x-bw/2, e.y-e.r-12, bw, 5);
+  ctx.fillStyle = hr>0.5 ? '#5ce08a' : hr>0.25 ? '#ffd93d' : '#ff6b6b';
+  ctx.fillRect(e.x-bw/2, e.y-e.r-12, bw*hr, 5);
+}
+
+function drawHero(h) {
+  const dead = h.hp <= 0;
+  ctx.globalAlpha = dead ? 0.25 : 1;
+
+  const bob = h.moving && !dead ? Math.sin(state.time*14 + h.slotIndex*1.1) * 2.5 : 0;
+  const attackLean = h.attackAnim > 0 ? (h.attackAnim/0.2) * 8 : 0;
+  const drawX = h.x + attackLean;
+  const drawY = h.y + bob;
+
+  // Тень
+  ctx.fillStyle = '#00000055';
+  ctx.beginPath(); ctx.ellipse(h.x, h.y+20, 20, 8, 0, 0, Math.PI*2); ctx.fill();
+
+  // Аура тега
+  ctx.strokeStyle = TAGS[h.tags[0]].c + '55'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(drawX, drawY, 24, 0, Math.PI*2); ctx.stroke();
+
+  // Щит
+  if (h.shield > 0 && !dead) {
+    ctx.strokeStyle = '#aaddff'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(drawX, drawY, 22, 0, Math.PI*2); ctx.stroke();
+  }
+
+  // Тело
+  ctx.fillStyle = h.flash > 0 ? '#fff' : h.color;
+  ctx.shadowColor = h.color; ctx.shadowBlur = 16;
+  ctx.beginPath(); ctx.arc(drawX, drawY, 18, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Внутренний круг
+  ctx.fillStyle = '#00000044';
+  ctx.beginPath(); ctx.arc(drawX, drawY, 10, 0, Math.PI*2); ctx.fill();
+
+  // Эмодзи
+  ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+  ctx.fillText(h.emoji, drawX, drawY + 5);
+
+  // Оружие (при атаке — вперёд)
+  if (!dead && h.type !== 'heal') {
+    const ex = attackLean > 0 ? 28 : 22;
+    ctx.strokeStyle = h.color; ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(drawX + 12, drawY - 6);
+    ctx.lineTo(drawX + ex, drawY - 10);
+    ctx.stroke();
+    // клинок
+    ctx.fillStyle = '#ddd';
+    ctx.beginPath();
+    ctx.moveTo(drawX + ex, drawY - 10);
+    ctx.lineTo(drawX + ex + 6, drawY - 12);
+    ctx.lineTo(drawX + ex + 6, drawY - 8);
+    ctx.fill();
+  }
+
+  // Уровень
+  ctx.fillStyle = '#ffd93d'; ctx.font = 'bold 9px sans-serif';
+  ctx.fillText('Lv' + h.level, h.x, drawY + 31);
+
+  // Имя
+  ctx.fillStyle = '#c9b8ff'; ctx.font = '10px sans-serif';
+  ctx.fillText(h.name, h.x, drawY + 43);
+
+  // HP
+  const bw = 44, hr = clamp(h.hp/h.maxHp, 0, 1);
+  ctx.fillStyle = '#000a'; ctx.fillRect(h.x-bw/2, drawY-34, bw, 5);
+  ctx.fillStyle = hr>0.5 ? '#5ce08a' : hr>0.25 ? '#ffd93d' : '#ff6b6b';
+  ctx.fillRect(h.x-bw/2, drawY-34, bw*hr, 5);
+
+  // Ульта-бар
+  if (h.ultCharge > 0 || h.ultActive > 0) {
+    const ur = h.ultCharge / h.ultMax;
+    const ultY = drawY - 40;
+    ctx.fillStyle = '#000a'; ctx.fillRect(h.x-bw/2, ultY, bw, 3);
+    ctx.fillStyle = h.ultActive > 0 ? '#fff' : (ur >= 1 ? '#ffd93d' : '#5bc8ff');
+    ctx.fillRect(h.x-bw/2, ultY, bw*(h.ultActive > 0 ? 1 : ur), 3);
+    if (ur >= 1 && h.ultActive <= 0) {
+      ctx.fillStyle = '#ffd93d'; ctx.font = 'bold 8px sans-serif';
+      ctx.fillText('★', h.x, ultY - 4);
+    }
+  }
+
+  ctx.globalAlpha = 1;
+}
+
+/* ══════════════════════════════════════════════════════════
+   UI
+   ══════════════════════════════════════════════════════════ */
+function updateHUD() {
+  $('waveNum').textContent = state.wave;
+  $('gemsEl').textContent = state.gems;
+  $('soulsEl').textContent = state.souls;
+
+  const counts = {};
+  state.heroes.forEach(h => h.tags.forEach(t => counts[t] = (counts[t]||0)+1));
+  $('synergyList').innerHTML = Object.entries(SYNERGIES).map(([tag,s])=>{
+    const c = counts[tag]||0;
+    const active = c >= s.need;
+    return `<span class="syn ${active?'active':''}" title="${s.desc}">${TAGS[tag].n} ${c}/${s.need}</span>`;
+  }).join('');
+
+  const sb = $('startBtn');
+  sb.disabled = state.phase !== 'prep' && state.phase !== 'gameover';
+  sb.textContent = state.phase === 'battle' ? '⚔️ Бой...' : (state.phase === 'gameover' ? '↻ Новый забег' : '▶ Волна');
+  $('pauseBtn').classList.toggle('active', state.paused);
+  $('autoBtn').classList.toggle('active', state.settings.autoNext);
+}
+
+function showModal(html) { $('modal').innerHTML = html; $('modal').classList.remove('hidden'); }
+function hideModal() { $('modal').classList.add('hidden'); $('modal').innerHTML = ''; }
+
+/* ══════════════════════════════════════════════════════════
+   РЕВАРД
+   ══════════════════════════════════════════════════════════ */
+function showReward() {
+  const pool = [...UPGRADES].sort(()=>Math.random()-0.5).slice(0,3);
+  showModal(`
+    <h2>Волна ${state.wave} пройдена!</h2>
+    <p class="sub">+${100 + state.wave*30}💎 · Рекорд: ${state.waveRecord}</p>
+    <div class="cards">
+      ${pool.map((u,i)=>`
+        <div class="card" data-up="${i}">
+          <div class="icon">${u.i}</div>
+          <div class="t">${u.n}</div>
+          <div class="d">${u.d}</div>
+          <div class="rar r-rare">рогалик</div>
+        </div>`).join('')}
+    </div>`);
+  document.querySelectorAll('[data-up]').forEach(el => {
+    el.onclick = () => {
+      applyUpgrade(pool[+el.dataset.up]);
+      hideModal();
+      state.phase = 'prep';
+      updateHUD();
+    };
+  });
+}
+
+function applyUpgrade(u) {
+  if (u.sp === 'heal') state.heroes.forEach(h=>{if(h.hp>0)h.hp=h.maxHp;});
+  else if (u.sp === 'gems') state.gems += 200;
+  else if (u.sp === 'levelup') {
+    const ids = state.roster;
+    const id = pick(ids);
+    state.heroData[id].level += 2;
+    rebuildActiveHeroes();
+  } else if (u.a) u.a(state.mods);
+  recalcHeroes();
+  persist();
+}
+
+/* ══════════════════════════════════════════════════════════
+   ГАЧА
+   ══════════════════════════════════════════════════════════ */
+function rollGear(minLvl = 1) {
+  // pity влияет на уровень
+  const pc = state.pity.count;
+  const lc = state.pity.legendaryCount;
+  let rarityRoll = Math.random();
+  let forced = 0;
+  if (lc >= 60) forced = 4;       // гарант легендарки
+  else if (pc >= 20) forced = 3;  // гарант эпика+
+
+  const r = forced || (rarityRoll < 0.55 ? 1 : rarityRoll < 0.85 ? 2 : rarityRoll < 0.97 ? 3 : 4);
+  const rar = ['common','rare','epic','legend'][r-1];
+  const level = minLvl + (r-1);
+
+  const def = pick(GEAR_DEFS);
+  return { uid: uidNew(), defId: def.id, level };
+}
+
+function pullGear() {
+  if (state.gems < 100) { return; }
+  state.gems -= 100;
+  state.pity.count++;
+  const item = rollGear();
+  const def = GEAR_DEFS.find(g => g.id === item.defId);
+  const rar = item.level <= 1 ? 'common' : item.level === 2 ? 'rare' : item.level === 3 ? 'epic' : 'legend';
+  if (rar === 'legend') { state.pity.legendaryCount = 0; }
+  else state.pity.legendaryCount++;
+  if (state.pity.count >= 20) state.pity.count = 0;
+
+  state.inventory.push(item);
+  persist();
+  updateHUD();
+  sfx('gacha');
+
+  showModal(`
+    <h2>Снаряжение получено!</h2>
+    <p class="sub">Pity: ${state.pity.count}/20 · Легендарка: ${state.pity.legendaryCount}/60</p>
+    <div class="cards">
+      <div class="card" style="width:220px; cursor:default">
+        <div class="icon">${def.icon}</div>
+        <div class="t">${def.name} · ур.${item.level}</div>
+        <div class="d">${SLOTS[def.slot]} · ${SETS[def.set].n} сет</div>
+        <div class="rar r-${rar}">${rar}</div>
+      </div>
+    </div>
+    <button id="backB" class="act primary">← К баннерам</button>
+  `);
+  $('backB').onclick = openBanner;
+}
+
+function pullShards(heroId) {
+  if (state.gems < 150) return;
+  state.gems -= 150;
+  const amt = 5 + Math.floor(Math.random()*6);
+  const hd = state.heroData[heroId];
+  hd.shards += amt;
+  let leveled = 0;
+  while (hd.shards >= 10) { hd.shards -= 10; hd.level++; leveled++; }
+  if (leveled) rebuildActiveHeroes();
+  persist();
+  updateHUD();
+  sfx('gacha');
+
+  const def = HERO_DEFS.find(d => d.id === heroId);
+  showModal(`
+    <h2 style="color:${def.color}">${def.emoji} ${def.name}</h2>
+    <p class="sub">Гача · −150💎</p>
+    <div class="cards">
+      <div class="card" style="width:220px; cursor:default">
+        <div class="icon" style="font-size:40px">${def.emoji}</div>
+        <div class="t">+${amt} осколков</div>
+        <div class="d">${leveled > 0 ? `<span style="color:#ffd93d">⬆ Уровень ${hd.level}!</span>` : `Прогресс: ${hd.shards}/10`}</div>
+      </div>
+    </div>
+    <button id="backB" class="act primary">← К баннерам</button>
+  `);
+  $('backB').onclick = openBanner;
+}
+
+function openBanner() {
+  showModal(`
+    <h2>🎲 Баннеры</h2>
+    <p class="sub">💎 ${state.gems} · Pity ${state.pity.count}/20 · Легендарка ${state.pity.legendaryCount}/60</p>
+    <div class="pity-bar"><div class="pity-fill" style="width:${state.pity.count/20*100}%"></div></div>
+    <div style="display:flex; gap:24px; flex-wrap:wrap; justify-content:center;">
+      <div style="text-align:center;">
+        <h3>Снаряжение</h3>
+        <div class="card" style="width:180px;" id="gearP">
+          <div class="icon">⚔️</div>
+          <div class="t">Призыв снаряжения</div>
+          <div class="d">Случайный предмет экипировки<br><span style="color:#5bc8ff">Ур.1-5 (pity → эпик+)</span></div>
+          <div class="rar r-rare">100 💎</div>
+        </div>
+      </div>
+      <div>
+        <h3>Призыв героя (осколки)</h3>
+        <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap:4px;">
+          ${HERO_DEFS.map(h => `
+            <div class="card hero-card" data-sh="${h.id}" style="width:66px;padding:6px 3px;">
+              <div class="icon" style="font-size:18px;color:${h.color}">${h.emoji}</div>
+              <div class="t" style="font-size:9px">${h.name}</div>
+              <div class="d" style="font-size:8px">${state.heroData[h.id].shards}/10</div>
+            </div>
+          `).join('')}
+        </div>
+        <p class="sub" style="margin-top:6px; text-align:center;">150 💎 · +5-10 осколков</p>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button id="mergeBtn" class="act small">🔀 Слияние дублей</button>
+      <button id="closeB" class="act primary">Закрыть</button>
+    </div>
+  `);
+  $('gearP').onclick = pullGear;
+  document.querySelectorAll('[data-sh]').forEach(el => { el.onclick = () => pullShards(el.dataset.sh); });
+  $('closeB').onclick = () => { hideModal(); updateHUD(); };
+  $('mergeBtn').onclick = openMerge;
+}
+
+function openMerge() {
+  // Группируем inventory по defId+level
+  const groups = {};
+  for (const it of state.inventory) {
+    // исключаем экипированные
+    if (isEquipped(it.uid)) continue;
+    const key = it.defId + '@' + it.level;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(it);
+  }
+  const mergeable = Object.entries(groups).filter(([k,v]) => v.length >= 3);
+
+  const html = mergeable.length
+    ? mergeable.map(([k, items]) => {
+        const it = items[0];
+        const def = GEAR_DEFS.find(g => g.id === it.defId);
+        return `<div class="merge-group">
+          <div style="font-size:20px">${def.icon}</div>
+          <div style="font-size:9px;color:#a89ecf;text-align:center">${def.name}</div>
+          <div style="font-size:8px;color:#666">ур.${it.level} ×${items.length}</div>
+          <button class="act small" data-merge="${k}">→ ур.${it.level+1}</button>
+        </div>`;
+      }).join('')
+    : '<div style="color:#666;padding:20px;">Нет 3 одинаковых неэкипированных предметов</div>';
+
+  showModal(`
+    <h2>🔀 Слияние дублей</h2>
+    <p class="sub">3 одинаковых → 1 улучшенный (уровень +1, статы ×1.5)</p>
+    <div class="merge-row">${html}</div>
+    <button id="backB" class="act primary">← К баннерам</button>
+  `);
+  document.querySelectorAll('[data-merge]').forEach(b => {
+    b.onclick = () => {
+      const key = b.dataset.merge;
+      const items = groups[key].slice(0, 3);
+      // удаляем эти 3
+      for (const it of items) {
+        const i = state.inventory.findIndex(x => x.uid === it.uid);
+        if (i >= 0) state.inventory.splice(i, 1);
+      }
+      // добавляем уровень +1
+      const def = GEAR_DEFS.find(g => g.id === items[0].defId);
+      state.inventory.push({ uid: uidNew(), defId: def.id, level: items[0].level + 1 });
+      persist();
+      sfx('gacha');
+      openMerge();
+    };
+  });
+  $('backB').onclick = openBanner;
+}
+
+function isEquipped(uid) {
+  for (const id in state.heroData) {
+    const g = state.heroData[id].gear;
+    if (g.weapon === uid || g.armor === uid || g.charm === uid) return true;
+  }
+  return false;
+}
+
+/* ══════════════════════════════════════════════════════════
+   АВТО-ПОДБОР СНАРЯЖЕНИЯ
+   ══════════════════════════════════════════════════════════ */
+function statsOfItems(items) {
+  const st = { atkP:0, hpP:0, aspdP:0, crit:0, regen:0 };
+  const setCounts = {};
+  for (const it of items) {
+    if (!it) continue;
+    const def = GEAR_DEFS.find(g => g.id === it.defId);
+    if (!def) continue;
+    const mult = Math.pow(1.5, it.level - 1);
+    for (const k in def.stats) st[k] = (st[k]||0) + def.stats[k] * mult;
+    setCounts[def.set] = (setCounts[def.set]||0) + 1;
+  }
+  for (const sid in setCounts) {
+    const c = setCounts[sid], sd = SETS[sid];
+    if (c >= 2) for (const k in sd.b2) st[k] = (st[k]||0) + sd.b2[k];
+    if (c >= 3) for (const k in sd.b3) st[k] = (st[k]||0) + sd.b3[k];
+  }
+  return st;
+}
+
+function gearScore(heroDef, st) {
+  const dealsDmg = heroDef.baseAtk > 0 ? 1 : 0;
+  return (1 + st.atkP * dealsDmg) * (1 + st.hpP) * (1 + st.aspdP)
+       * (1 + st.crit * 0.6 * dealsDmg) * (1 + st.regen * 8);
+}
+
+function autoEquip(heroId) {
+  const hd = state.heroData[heroId];
+  const heroDef = HERO_DEFS.find(d => d.id === heroId);
+  // предметы, занятые другими героями, не трогаем
+  const taken = new Set();
+  for (const id in state.heroData) {
+    if (id === heroId) continue;
+    const g = state.heroData[id].gear;
+    [g.weapon, g.armor, g.charm].forEach(u => { if (u) taken.add(u); });
+  }
+  const free = state.inventory.filter(it => !taken.has(it.uid));
+  const cand = {};
+  for (const slot in SLOTS) {
+    const list = free.filter(it => GEAR_DEFS.find(g => g.id === it.defId).slot === slot)
+      .sort((a,b) => gearScore(heroDef, statsOfItems([b])) - gearScore(heroDef, statsOfItems([a])))
+      .slice(0, 8);
+    cand[slot] = list.length ? list : [null];
+  }
+  let best = null, bestScore = -1;
+  for (const w of cand.weapon) for (const a of cand.armor) for (const c of cand.charm) {
+    const sc = gearScore(heroDef, statsOfItems([w,a,c]));
+    if (sc > bestScore) { bestScore = sc; best = [w,a,c]; }
+  }
+  hd.gear.weapon = best[0] ? best[0].uid : null;
+  hd.gear.armor  = best[1] ? best[1].uid : null;
+  hd.gear.charm  = best[2] ? best[2].uid : null;
+}
+
+function autoEquipAll() {
+  // снимаем всё с героев отряда, затем подбираем по очереди (с фронта к тылу)
+  for (const id of state.roster) state.heroData[id].gear = { weapon:null, armor:null, charm:null };
+  for (const id of [...state.roster].reverse()) autoEquip(id);
+}
+
+/* ══════════════════════════════════════════════════════════
+   ОТРЯД
+   ══════════════════════════════════════════════════════════ */
+function openRoster() {
+  const active = state.roster;
+
+  const activeHTML = active.map((id, i) => {
+    const hd = state.heroData[id];
+    const def = HERO_DEFS.find(d => d.id === id);
+    return `<div class="slot-card" data-hero="${id}">
+      <div class="pos">${i+1}</div>
+      <div class="icon" style="color:${def.color}">${def.emoji}</div>
+      <div class="t">${def.name}</div>
+      <div style="font-size:8px;color:#ffd93d">Lv${hd.level}</div>
+      <div class="arrows">
+        ${i>0?`<button data-move="${i}:-1">←</button>`:''}
+        ${i<active.length-1?`<button data-move="${i}:1">→</button>`:''}
+        <button data-remove="${id}">✖</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const poolHTML = HERO_DEFS.map(h => {
+    const hd = state.heroData[h.id];
+    const sel = active.includes(h.id);
+    const disabled = !sel && active.length >= 5;
+    return `<div class="card hero-card ${sel?'sel':''} ${disabled?'disabled':''}" data-toggle="${h.id}">
+      <div class="icon" style="color:${h.color}">${h.emoji}</div>
+      <div class="t">${h.name}</div>
+      <div class="d">Lv${hd.level} · ${hd.shards}/10</div>
+      <div class="d" style="font-size:8px;color:#666;margin-top:2px">${h.tags.map(t=>TAGS[t].n).join('·')}</div>
+    </div>`;
+  }).join('');
+
+  showModal(`
+    <h2>👥 Отряд (${active.length}/5)</h2>
+    <p class="sub">Слева = тыл (безопасно), справа = фронт (танк)</p>
+    <div class="active-row">${activeHTML}</div>
+    <h3>Пул героев · клик для выбора</h3>
+    <div class="cards" style="max-width:720px">${poolHTML}</div>
+    <div style="display:flex; gap:8px;">
+      <button id="tgtBtn" class="act small">🎯 Цель: ${state.settings.target === 'nearest' ? 'ближний' : state.settings.target === 'weakest' ? 'слабейший' : 'босс'}</button>
+      <button id="gearBtn" class="act small">⚔️ Снаряжение</button>
+      <button id="autoAllBtn" class="act small">✨ Авто всем</button>
+      <button id="closeR" class="act primary">Готово</button>
+    </div>
+  `);
+
+  document.querySelectorAll('[data-toggle]').forEach(el => {
+    el.onclick = () => {
+      const id = el.dataset.toggle;
+      const i = state.roster.indexOf(id);
+      if (i >= 0) {
+        if (state.roster.length > 1) state.roster.splice(i, 1);
+      } else {
+        if (state.roster.length < 5) state.roster.push(id);
+      }
+      rebuildActiveHeroes();
+      persist();
+      openRoster();
+    };
+  });
+  document.querySelectorAll('[data-hero]').forEach(el => {
+    el.onclick = (ev) => {
+      if (ev.target.tagName === 'BUTTON') return;
+      openHeroDetail(el.dataset.hero);
+    };
+  });
+  document.querySelectorAll('[data-move]').forEach(el => {
+    el.onclick = () => {
+      const [i, dir] = el.dataset.move.split(':').map(Number);
+      const j = i + dir;
+      if (j < 0 || j >= state.roster.length) return;
+      [state.roster[i], state.roster[j]] = [state.roster[j], state.roster[i]];
+      rebuildActiveHeroes();
+      persist();
+      openRoster();
+    };
+  });
+  document.querySelectorAll('[data-remove]').forEach(el => {
+    el.onclick = () => {
+      const i = state.roster.indexOf(el.dataset.remove);
+      if (i >= 0 && state.roster.length > 1) state.roster.splice(i, 1);
+      rebuildActiveHeroes();
+      persist();
+      openRoster();
+    };
+  });
+  $('tgtBtn').onclick = () => {
+    const modes = ['nearest','weakest','boss'];
+    const i = modes.indexOf(state.settings.target);
+    state.settings.target = modes[(i+1) % modes.length];
+    persist();
+    openRoster();
+  };
+  $('gearBtn').onclick = () => openHeroDetail(state.roster[0]);
+  $('autoAllBtn').onclick = () => { autoEquipAll(); rebuildActiveHeroes(); persist(); openRoster(); };
+  $('closeR').onclick = () => { hideModal(); updateHUD(); };
+}
+
+function openHeroDetail(heroId) {
+  const def = HERO_DEFS.find(d => d.id === heroId);
+  const hd = state.heroData[heroId];
+
+  const slotsHTML = Object.entries(SLOTS).map(([slot, label]) => {
+    const uidRef = hd.gear[slot];
+    const item = uidRef ? state.inventory.find(i => i.uid === uidRef) : null;
+    const itemDef = item ? GEAR_DEFS.find(g => g.id === item.defId) : null;
+    return `<div class="slot-row ${item?'':'empty'}" data-slot="${slot}">
+      <div style="font-size:18px">${itemDef ? itemDef.icon : '▫️'}</div>
+      <div>
+        <div class="lbl">${label}</div>
+        <div style="font-size:11px">${itemDef ? itemDef.name + ' ур.' + item.level : 'пусто'}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Сет-бонусы текущие
+  const setBonuses = {};
+  for (const slot in hd.gear) {
+    const uidRef = hd.gear[slot];
+    if (!uidRef) continue;
+    const item = state.inventory.find(i => i.uid === uidRef);
+    if (!item) continue;
+    const g = GEAR_DEFS.find(x => x.id === item.defId);
+    if (g && g.set) setBonuses[g.set] = (setBonuses[g.set]||0) + 1;
+  }
+  const setInfo = Object.entries(setBonuses).map(([sid,c])=>{
+    const sdef = SETS[sid];
+    let bonus = '';
+    if (c >= 2) bonus += `2:${Object.entries(sdef.b2).map(([k,v])=>`${k}+${Math.round(v*100)}%`).join(',')}`;
+    if (c >= 3) bonus += ` | 3:${Object.entries(sdef.b3).map(([k,v])=>`${k}+${Math.round(v*100)}%`).join(',')}`;
+    return `<div style="font-size:10px; color:${sdef.c}">${sdef.n} (${c}) ${bonus}</div>`;
+  }).join('');
+
+  // Инвентарь
+  const invHTML = state.inventory.map(it => {
+    const g = GEAR_DEFS.find(x => x.id === it.defId);
+    const equipped = isEquipped(it.uid);
+    const equippedHere = Object.values(hd.gear).includes(it.uid);
+    return `<div class="inv-item ${equippedHere?'equipped':''} ${equipped && !equippedHere?'used':''}" data-uid="${it.uid}" title="${g.name} ур.${it.level}">
+      <div class="inv-icon">${g.icon}</div>
+      <div class="inv-name">${g.name}</div>
+      <div class="inv-lvl">${it.level}</div>
+    </div>`;
+  }).join('') || '<div style="color:#666;padding:10px;font-size:11px">Пусто</div>';
+
+  // Статы
+  const live = state.heroes.find(h => h.id === heroId);
+  const statsHTML = live ? `
+    <div>HP: <b>${Math.round(live.maxHp)}</b></div>
+    <div>ATK: <b>${live.atk.toFixed(1)}</b></div>
+    <div>Скор.атк: <b>${live.aspd.toFixed(2)}/с</b></div>
+    <div>Крит: <b>${Math.round(live.crit*100)}%</b></div>
+    <div style="margin-top:5px; color:#5bc8ff">Ульт: ${def.ult.n}</div>
+    <div style="font-size:10px; color:#a89ecf">${def.ult.desc}</div>
+    <div style="margin-top:5px; color:#ffd93d">Осколки: ${hd.shards}/10</div>
+  ` : '<div style="color:#666">Герой не в отряде</div>';
+
+  showModal(`
+    <h2 style="color:${def.color}">${def.emoji} ${def.name} · ур.${hd.level}</h2>
+    <div class="hero-detail">
+      <div>${slotsHTML}</div>
+      <div class="stats">${statsHTML}</div>
+    </div>
+    ${setInfo ? `<div style="max-width:400px;text-align:center">${setInfo}</div>` : ''}
+    <div style="width:100%;max-width:640px;">
+      <div style="font-size:11px;color:#9a92bb;margin-bottom:4px">📦 Инвентарь · клик — надеть</div>
+      <div class="inv-grid">${invHTML}</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button id="backR" class="act small">← Отряд</button>
+      <button id="autoEq" class="act small">✨ Авто-подбор</button>
+      <button id="closeH" class="act primary">Закрыть</button>
+    </div>
+  `);
+
+  document.querySelectorAll('.slot-row:not(.empty)').forEach(s => {
+    s.onclick = () => {
+      const slot = s.dataset.slot;
+      if (hd.gear[slot]) { hd.gear[slot] = null; rebuildActiveHeroes(); persist(); openHeroDetail(heroId); }
+    };
+  });
+  document.querySelectorAll('.inv-item:not(.used)').forEach(iv => {
+    iv.onclick = () => {
+      const u = +iv.dataset.uid;
+      const item = state.inventory.find(i => i.uid === u);
+      if (!item) return;
+      const g = GEAR_DEFS.find(x => x.id === item.defId);
+      // снимаем если уже надет
+      if (hd.gear[g.slot] === u) return;
+      hd.gear[g.slot] = u;
+      rebuildActiveHeroes(); persist(); openHeroDetail(heroId);
+    };
+  });
+  $('autoEq').onclick = () => { autoEquip(heroId); rebuildActiveHeroes(); persist(); openHeroDetail(heroId); };
+  $('backR').onclick = openRoster;
+  $('closeH').onclick = () => { hideModal(); updateHUD(); };
+}
+
+/* ══════════════════════════════════════════════════════════
+   МЕТА
+   ══════════════════════════════════════════════════════════ */
+function openMeta() {
+  const html = META_UPGRADES.map(m => {
+    const lvl = state.metaUpgrades[m.id] || 0;
+    const cost = m.cost(lvl);
+    const canBuy = lvl < m.max && state.souls >= cost;
+    return `<div class="card" style="width:150px">
+      <div class="icon">${m.i}</div>
+      <div class="t">${m.n}</div>
+      <div class="d">${m.d}</div>
+      <div class="d" style="margin-top:4px">Ур. ${lvl}/${m.max}</div>
+      <button class="act small" data-buy="${m.id}" ${canBuy?'':'disabled'} style="margin-top:6px">
+        ${lvl >= m.max ? 'MAX' : `${cost} 💀`}
+      </button>
+    </div>`;
+  }).join('');
+
+  showModal(`
+    <h2>💀 Души</h2>
+    <p class="sub">У вас ${state.souls} 💀 · Рекорд волны: ${state.waveRecord}</p>
+    <p class="sub" style="font-size:10px">Души выдаются после смерти: волна × 3</p>
+    <div class="cards" style="max-width:720px">${html}</div>
+    <div style="display:flex; gap:8px;">
+      <button id="dailyBtn" class="act small">📅 Ежедневный бонус</button>
+      <button id="resetBtn" class="act small" style="background:#5a1a1a">⚠ Сбросить</button>
+      <button id="closeM" class="act primary">Закрыть</button>
+    </div>
+  `);
+
+  document.querySelectorAll('[data-buy]').forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.buy;
+      const m = META_UPGRADES.find(x => x.id === id);
+      const lvl = state.metaUpgrades[id] || 0;
+      const cost = m.cost(lvl);
+      if (lvl >= m.max || state.souls < cost) return;
+      state.souls -= cost;
+      state.metaUpgrades[id] = lvl + 1;
+      rebuildActiveHeroes();
+      persist();
+      updateHUD();
+      openMeta();
+    };
+  });
+  $('dailyBtn').onclick = () => {
+    const today = new Date().toDateString();
+    if (state.lastDaily === today) { alert('Уже получено сегодня'); return; }
+    state.lastDaily = today;
+    state.gems += 150;
+    state.souls += 10;
+    persist(); updateHUD();
+    alert('🎁 +150💎 +10💀 за ежедневный вход!');
+    openMeta();
+  };
+  $('resetBtn').onclick = () => {
+    if (confirm('Сбросить ВЕСЬ прогресс? Это необратимо!')) {
+      localStorage.removeItem(SAVE_KEY);
+      location.reload();
+    }
+  };
+  $('closeM').onclick = () => { hideModal(); updateHUD(); if (state.phase === 'gameover') restartRun(); };
+}
+
+/* ══════════════════════════════════════════════════════════
+   GAME OVER
+   ══════════════════════════════════════════════════════════ */
+function showGameOver() {
+  const soulsEarned = state.wave * 3;
+  state.souls += soulsEarned;
+  if (state.wave > state.waveRecord) state.waveRecord = state.wave;
+  persist();
+
+  const avg = Math.round(state.heroes.reduce((s,h)=>s+h.level,0)/Math.max(1,state.heroes.length));
+  showModal(`
+    <h2 style="color:#ff6b6b">☠ Отряд пал</h2>
+    <p class="sub">Волна ${state.wave} · Рекорд ${state.waveRecord}</p>
+    <div class="cards">
+      <div class="card" style="width:130px;cursor:default">
+        <div class="icon">💀</div><div class="t">Души</div>
+        <div class="d" style="font-size:20px;color:#fff">+${soulsEarned}</div>
+      </div>
+      <div class="card" style="width:130px;cursor:default">
+        <div class="icon">🌊</div><div class="t">Волна</div>
+        <div class="d" style="font-size:20px;color:#fff">${state.wave}</div>
+      </div>
+      <div class="card" style="width:130px;cursor:default">
+        <div class="icon">⭐</div><div class="t">Ср.ур.</div>
+        <div class="d" style="font-size:20px;color:#fff">${avg}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+      <button id="goMeta" class="act">💀 Потратить души</button>
+      <button id="goRestart" class="act primary">↻ Новый забег</button>
+    </div>
+  `);
+  $('goMeta').onclick = openMeta;
+  $('goRestart').onclick = () => { hideModal(); restartRun(); };
+}
+
+function restartRun() {
+  state.phase = 'prep'; state.wave = 0;
+  state.enemies = []; state.projectiles = []; state.enemyProjectiles = [];
+  state.beams = []; state.particles = []; state.floats = [];
+  state.telegraphs = []; state.shockwaves = [];
+  state.spawnQueue = []; state.spawnTimer = 0;
+  state.time = 0; state.groupX = GROUP_START_X;
+  state.mods = {dmgMul:1,hpMul:1,aspdMul:1,abilityMul:1,regen:0,critAdd:0};
+  rebuildActiveHeroes();
+  state.heroes.forEach(h => h.hp = h.maxHp);
+  updateHUD();
+}
+
+/* ══════════════════════════════════════════════════════════
+   ИНИЦИАЛИЗАЦИЯ
+   ══════════════════════════════════════════════════════════ */
+function init() {
+  const s = loadSave();
+  if (s) {
+    state.roster = s.roster || DEFAULT_ROSTER;
+    state.heroData = { ...defaultHeroData(), ...s.heroData };
+    state.inventory = s.inventory || [];
+    state.gems = s.gems ?? 300;
+    state.souls = s.souls ?? 0;
+    state.waveRecord = s.waveRecord ?? 0;
+    state.metaUpgrades = { ...state.metaUpgrades, ...s.metaUpgrades };
+    state.pity = s.pity || { count:0, legendaryCount:0 };
+    state.settings = { ...state.settings, ...s.settings };
+    uid = s.uidNext || 1;
+    state.firstBattleRewards = s.firstBattleRewards || [false,false,false];
+    state.lastDaily = s.lastDaily || '';
+  } else {
+    // стартовый подарок
+    state.inventory.push({ uid: uidNew(), defId:'sword', level:1 });
+    state.inventory.push({ uid: uidNew(), defId:'robe', level:1 });
+    persist();
+  }
+  rebuildActiveHeroes();
+  updateHUD();
+  requestAnimationFrame(loop);
+}
+
+/* ══════════════════════════════════════════════════════════
+   КНОПКИ
+   ══════════════════════════════════════════════════════════ */
+document.querySelectorAll('.spd button').forEach(b => {
+  b.onclick = () => {
+    state.timeScale = +b.dataset.speed;
+    document.querySelectorAll('.spd button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+  };
+});
+$('pauseBtn').onclick = () => { state.paused = !state.paused; updateHUD(); };
+$('autoBtn').onclick = () => { state.settings.autoNext = !state.settings.autoNext; persist(); updateHUD(); };
+$('rosterBtn').onclick = openRoster;
+$('bannerBtn').onclick = openBanner;
+$('metaBtn').onclick = openMeta;
+$('startBtn').onclick = () => {
+  if (state.phase === 'gameover') { hideModal(); restartRun(); return; }
+  if (state.phase === 'prep') { initAudio(); spawnWave(); }
+};
+
+// Клавиши
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space' && state.phase === 'prep' && !state.paused && $('modal').classList.contains('hidden')) { e.preventDefault(); initAudio(); spawnWave(); }
+  if (e.code === 'KeyP') { state.paused = !state.paused; updateHUD(); }
+  if (e.code === 'Digit1') { state.timeScale = 1; document.querySelectorAll('.spd button').forEach((b,i)=>b.classList.toggle('active', i===0)); }
+  if (e.code === 'Digit2') { state.timeScale = 2; document.querySelectorAll('.spd button').forEach((b,i)=>b.classList.toggle('active', i===1)); }
+  if (e.code === 'Digit3') { state.timeScale = 3; document.querySelectorAll('.spd button').forEach((b,i)=>b.classList.toggle('active', i===2)); }
+});
+
+// Save on close
+window.addEventListener('beforeunload', persist);
+
+/* ══════════════════════════════════════════════════════════
+   ГЛАВНЫЙ ЦИКЛ
+   ══════════════════════════════════════════════════════════ */
+let lastTime = performance.now();
+function loop(now) {
+  const realDt = Math.min(0.05, (now - lastTime)/1000);
+  lastTime = now;
+  const dt = realDt * state.timeScale;
+
+  const modalOpen = !$('modal').classList.contains('hidden');
+  if (!state.paused && !modalOpen) {
+    if (state.phase === 'battle') updateBattle(dt);
+    else updateGroupMovement(dt);
+    updateEffects(dt);
+  }
+  render();
+  requestAnimationFrame(loop);
+}
+
+init();
+</script>
+</body>
+</html>
